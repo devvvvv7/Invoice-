@@ -1,115 +1,229 @@
 <!DOCTYPE html>
-   <html lang="en">
-   <head>
-       <meta charset="UTF-8">
-       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>Invoice Generator</title>
-       <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAAQEAAAEAIAAwAAAAFgAAACgAAAABAAAAAgAAAAEAIAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA==">
-       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-       <script src="https://cdn.tailwindcss.com"></script>
-   </head>
-   <body class="bg-gray-100 flex items-center justify-center min-h-screen">
-       <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-           <h1 class="text-2xl font-bold text-center mb-6">Invoice Generator</h1>
-           <form id="invoiceForm" class="space-y-4">
-               <div>
-                   <label for="customerName" class="block text-sm font-medium text-gray-700">Customer Name</label>
-                   <input type="text" id="customerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
-               </div>
-               <div>
-                   <label for="materialType" class="block text-sm font-medium text-gray-700">Material Type</label>
-                   <select id="materialType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
-                       <option value="Pla Tap">Pla Tap</option>
-                       <option value="Plastic Wood">Plastic Wood</option>
-                   </select>
-               </div>
-               <div>
-                   <label for="rate" class="block text-sm font-medium text-gray-700">Rate per Sq. Ft.</label>
-                   <input type="number" id="rate" min="0" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
-               </div>
-               <div>
-                   <label for="squareFeet" class="block text-sm font-medium text-gray-700">Total Square Feet</label>
-                   <input type="number" id="squareFeet" min="0" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
-               </div>
-               <div>
-                   <label for="totalAmount" class="block text-sm font-medium text-gray-700">Total Amount</label>
-                   <input type="text" id="totalAmount" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100" readonly>
-               </div>
-               <button type="button" onclick="generateInvoice()" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">Generate Invoice</button>
-           </form>
-       </div>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAAQEAAAEAIAAwAAAAFgAAACgAAAABAAAAAgAAAAEAIAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA==">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-100 to-white flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 hover:shadow-3xl">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6 fade-in">Invoice Generator</h1>
+        <form id="invoiceForm" class="space-y-6">
+            <!-- Header Section -->
+            <div class="border-b-2 border-indigo-200 pb-4 fade-in">
+                <label for="companyName" class="block text-lg font-semibold text-gray-700">Company Name (Optional)</label>
+                <input type="text" id="companyName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" placeholder="e.g., Texture World">
+                <label for="invoiceDate" class="block mt-2 text-lg font-semibold text-gray-700">Invoice Date</label>
+                <input type="date" id="invoiceDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" value="2025-06-21" required>
+            </div>
 
-       <script>
-           // Calculate total amount on input change
-           document.getElementById('rate').addEventListener('input', calculateTotal);
-           document.getElementById('squareFeet').addEventListener('input', calculateTotal);
+            <!-- Customer Details Section -->
+            <div class="border-b-2 border-indigo-200 pb-4 fade-in" style="animation-delay: 0.2s">
+                <h2 class="text-xl font-semibold text-indigo-600 mb-2">Customer Details</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="customerName" class="block text-sm font-medium text-gray-700">Customer Name</label>
+                        <input type="text" id="customerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                    </div>
+                    <div>
+                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" id="phoneNumber" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                    </div>
+                </div>
+                <label for="address" class="block mt-2 text-sm font-medium text-gray-700">Address</label>
+                <textarea id="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" rows="2" required></textarea>
+            </div>
 
-           function calculateTotal() {
-               const rate = parseFloat(document.getElementById('rate').value) || 0;
-               const squareFeet = parseFloat(document.getElementById('squareFeet').value) || 0;
-               const total = (rate * squareFeet).toFixed(2);
-               document.getElementById('totalAmount').value = `$${total}`;
-           }
+            <!-- Material Details Section -->
+            <div class="pb-4 fade-in" style="animation-delay: 0.4s">
+                <h2 class="text-xl font-semibold text-indigo-600 mb-2">Material Details</h2>
+                <div id="materialsContainer" class="space-y-4">
+                    <div class="grid grid-cols-5 gap-4 items-center font-semibold text-gray-700">
+                        <span>Material Type</span>
+                        <span>Rate (Sq.Ft)</span>
+                        <span>Total Sq. Ft</span>
+                        <span>Amount</span>
+                        <span>Action</span>
+                    </div>
+                    <div class="grid grid-cols-5 gap-4 items-center slide-in" data-row="0">
+                        <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                            <option value="Pla Tap">Pla Tap</option>
+                            <option value="Plastic Wood">Plastic Wood</option>
+                        </select>
+                        <input type="number" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                        <input type="number" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                        <input type="text" class="w-full rounded-md border-gray-300 bg-gray-100 p-2" readonly>
+                        <button type="button" onclick="deleteMaterialRow(this)" class="bg-red-600 text-white p-1 rounded-md hover:bg-red-700 transition duration-200">Delete</button>
+                    </div>
+                </div>
+                <button type="button" onclick="addMaterialRow()" class="mt-2 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-200">Add Material</button>
+            </div>
 
-           function generateInvoice() {
-               try {
-                   // Get form values
-                   const customerName = document.getElementById('customerName').value;
-                   const materialType = document.getElementById('materialType').value;
-                   const rate = parseFloat(document.getElementById('rate').value) || 0;
-                   const squareFeet = parseFloat(document.getElementById('squareFeet').value) || 0;
-                   const totalAmount = (rate * squareFeet).toFixed(2);
-                   const currentDate = new Date().toLocaleDateString();
+            <div class="fade-in" style="animation-delay: 0.6s">
+                <label for="totalAmount" class="block text-lg font-medium text-gray-700">Total Amount</label>
+                <input type="text" id="totalAmount" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 p-2 text-xl font-semibold text-indigo-700" readonly>
+            </div>
+            <button type="button" onclick="generateInvoice()" class="w-full bg-indigo-600 text-white py-3 px-6 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 text-lg font-bold transition duration-300 transform hover:scale-105">Generate Invoice</button>
+        </form>
+    </div>
 
-                   // Validate inputs
-                   if (!customerName || !rate || !squareFeet) {
-                       alert('Please fill in all required fields.');
-                       return;
-                   }
+    <script>
+        let invoiceCounter = 1;
 
-                   // Check if jsPDF is loaded
-                   if (!window.jspdf || !window.jspdf.jsPDF) {
-                       alert('jsPDF library failed to load. Please try refreshing the page.');
-                       console.error('jsPDF not loaded');
-                       return;
-                   }
+        // Calculate total amount for each row
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
+                const row = e.target.closest('[data-row]');
+                if (row) {
+                    const rate = parseFloat(row.querySelectorAll('input')[0].value) || 0;
+                    const sqft = parseFloat(row.querySelectorAll('input')[1].value) || 0;
+                    const amount = (rate * sqft).toFixed(2);
+                    row.querySelectorAll('input')[2].value = `$${amount}`;
+                    calculateTotal();
+                }
+            }
+        });
 
-                   const { jsPDF } = window.jspdf;
-                   const doc = new jsPDF();
+        function addMaterialRow() {
+            const container = document.getElementById('materialsContainer');
+            const rows = container.querySelectorAll('[data-row]');
+            const newRow = document.createElement('div');
+            newRow.className = 'grid grid-cols-5 gap-4 items-center slide-in';
+            newRow.setAttribute('data-row', rows.length);
+            newRow.innerHTML = `
+                <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                    <option value="Pla Tap">Pla Tap</option>
+                    <option value="Plastic Wood">Plastic Wood</option>
+                </select>
+                <input type="number" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                <input type="number" min="0" step="0.01" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
+                <input type="text" class="w-full rounded-md border-gray-300 bg-gray-100 p-2" readonly>
+                <button type="button" onclick="deleteMaterialRow(this)" class="bg-red-600 text-white p-1 rounded-md hover:bg-red-700 transition duration-200">Delete</button>
+            `;
+            container.insertBefore(newRow, container.lastElementChild);
+            newRow.style.animationDelay = `${0.1 * (rows.length + 1)}s`;
+        }
 
-                   // Company Header
-                   doc.setFontSize(20);
-                   doc.text('Invoice Generator Inc.', 20, 20);
-                   doc.setFontSize(12);
-                   doc.text('123 Business St, City, Country', 20, 30);
+        function deleteMaterialRow(button) {
+            const row = button.closest('[data-row]');
+            if (row) {
+                row.classList.add('opacity-0');
+                setTimeout(() => {
+                    row.remove();
+                    calculateTotal();
+                    renumberRows();
+                }, 300); // Match the transition duration
+            }
+        }
 
-                   // Invoice Details
-                   doc.setFontSize(16);
-                   doc.text('Invoice', 20, 50);
-                   doc.setFontSize(12);
-                   doc.text(`Date: ${currentDate}`, 20, 60);
-                   doc.text(`Customer: ${customerName}`, 20, 70);
+        function renumberRows() {
+            const rows = document.querySelectorAll('[data-row]');
+            rows.forEach((row, index) => {
+                row.setAttribute('data-row', index);
+            });
+        }
 
-                   // Table-like layout using basic text
-                   doc.setFontSize(12);
-                   doc.text('Description:', 20, 80);
-                   doc.text(materialType, 60, 80);
-                   doc.text('Rate/Sq.Ft.:', 20, 90);
-                   doc.text(`$${rate.toFixed(2)}`, 60, 90);
-                   doc.text('Sq.Ft.:', 20, 100);
-                   doc.text(`${squareFeet}`, 60, 100);
-                   doc.text('Total:', 20, 110);
-                   doc.text(`$${totalAmount}`, 60, 110);
-                   doc.text(`Total Amount: $${totalAmount}`, 20, 130);
+        function calculateTotal() {
+            let total = 0;
+            const rows = document.querySelectorAll('[data-row]');
+            rows.forEach(row => {
+                const amount = parseFloat(row.querySelectorAll('input')[2].value.replace('$', '')) || 0;
+                total += amount;
+            });
+            document.getElementById('totalAmount').value = `$${total.toFixed(2)}`;
+        }
 
-                   // Save PDF
-                   doc.save(`Invoice_${customerName}_${currentDate}.pdf`);
-                   console.log('PDF generated successfully');
-               } catch (error) {
-                   console.error('Error generating PDF:', error);
-                   alert('An error occurred while generating the PDF. Check the console for details.');
-               }
-           }
-       </script>
-   </body>
-   </html>
+        function generateInvoice() {
+            try {
+                const companyName = document.getElementById('companyName').value || 'TEXTURE WORLD';
+                const invoiceDate = document.getElementById('invoiceDate').value;
+                const customerName = document.getElementById('customerName').value;
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const address = document.getElementById('address').value;
+                const totalAmount = parseFloat(document.getElementById('totalAmount').value.replace('$', '')) || 0;
+
+                if (!customerName || !phoneNumber || !address || !invoiceDate) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+
+                if (!window.jspdf || !window.jspdf.jsPDF) {
+                    alert('jsPDF library failed to load. Please try refreshing the page.');
+                    console.error('jsPDF not loaded');
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Auto-generate Invoice Number
+                const invoiceNumber = `INV-${new Date(invoiceDate).getFullYear()}${String(new Date(invoiceDate).getMonth() + 1).padStart(2, '0')}${String(new Date(invoiceDate).getDate()).padStart(2, '0')}-${String(invoiceCounter++).padStart(3, '0')}`;
+
+                // Header Section
+                doc.setFontSize(20);
+                doc.text(companyName, 80, 20);
+                doc.setFontSize(12);
+                doc.text(`Invoice Number: ${invoiceNumber}`, 20, 30);
+                doc.text(`Invoice Date: ${new Date(invoiceDate).toLocaleDateString('en-GB')}`, 20, 40);
+
+                // Customer Details Section
+                doc.text('Customer Details:', 20, 50);
+                doc.text(`Name: ${customerName}`, 20, 60);
+                doc.text(`Phone: ${phoneNumber}`, 20, 70);
+                doc.text(`Address: ${address}`, 20, 80);
+
+                // Material Details Section
+                doc.setFontSize(12);
+                const rows = document.querySelectorAll('[data-row]');
+                let y = 90;
+                doc.text('Material Summary:', 20, y);
+                y += 10;
+                doc.text('Material Type', 20, y);
+                doc.text('Rate (Sq.Ft)', 70, y);
+                doc.text('Total Sq.Ft', 120, y);
+                doc.text('Amount', 170, y);
+                y += 10;
+                rows.forEach(row => {
+                    const material = row.querySelector('select').value;
+                    const rate = parseFloat(row.querySelectorAll('input')[0].value) || 0;
+                    const sqft = parseFloat(row.querySelectorAll('input')[1].value) || 0;
+                    const amount = (rate * sqft).toFixed(2);
+                    doc.text(material, 20, y);
+                    doc.text(`$${rate.toFixed(2)}`, 70, y);
+                    doc.text(`${sqft}`, 120, y);
+                    doc.text(`$${amount}`, 170, y);
+                    y += 10;
+                });
+                doc.text('Total Amount', 170, y);
+                doc.text(`$${totalAmount.toFixed(2)}`, 200, y);
+
+                // Save PDF
+                doc.save(`Invoice_${invoiceNumber}_${customerName}_${new Date(invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`);
+                console.log('PDF generated successfully');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('An error occurred while generating the PDF. Check the console for details.');
+            }
+        }
+    </script>
+</body>
+</html>
