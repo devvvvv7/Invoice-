@@ -39,32 +39,26 @@
             <!-- Customer Details Section -->
             <div class="border-b-2 border-indigo-200 pb-4 fade-in" style="animation-delay: 0.2s">
                 <h2 class="text-xl font-semibold text-indigo-600 mb-2">Customer Details</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="customerName" class="block text-sm font-medium text-gray-700">Customer Name</label>
-                        <input type="text" id="customerName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
-                    </div>
-                    <div>
-                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="tel" id="phoneNumber" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
-                    </div>
+                <div>
+                    <label for="clientName" class="block text-sm font-medium text-gray-700">Client's/Site Name</label>
+                    <input type="text" id="clientName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
                 </div>
-                <label for="address" class="block mt-2 text-sm font-medium text-gray-700">Address</label>
-                <textarea id="address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" rows="2" required></textarea>
             </div>
 
             <!-- Material Details Section -->
             <div class="pb-4 fade-in" style="animation-delay: 0.4s">
                 <h2 class="text-xl font-semibold text-indigo-600 mb-2">Material Details</h2>
                 <div id="materialsContainer" class="space-y-4">
-                    <div class="grid grid-cols-5 gap-4 items-center font-semibold text-gray-700">
+                    <div class="grid grid-cols-6 gap-4 items-center font-semibold text-gray-700">
+                        <span>S.No.</span>
                         <span>Material Type</span>
+                        <span>Area (Sq.Ft)</span>
                         <span>Rate (Sq.Ft)</span>
-                        <span>Total Sq. Ft</span>
                         <span>Amount</span>
                         <span>Action</span>
                     </div>
-                    <div class="grid grid-cols-5 gap-4 items-center slide-in" data-row="0">
+                    <div class="grid grid-cols-6 gap-4 items-center slide-in" data-row="0">
+                        <span>01</span>
                         <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
                             <option value="Pla Tap">Pla Tap</option>
                             <option value="Plastic Wood">Plastic Wood</option>
@@ -94,9 +88,9 @@
             if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
                 const row = e.target.closest('[data-row]');
                 if (row) {
-                    const rate = parseFloat(row.querySelectorAll('input')[0].value) || 0;
-                    const sqft = parseFloat(row.querySelectorAll('input')[1].value) || 0;
-                    const amount = (rate * sqft).toFixed(2);
+                    const area = parseFloat(row.querySelectorAll('input')[0].value) || 0;
+                    const rate = parseFloat(row.querySelectorAll('input')[1].value) || 0;
+                    const amount = (area * rate).toFixed(2);
                     row.querySelectorAll('input')[2].value = `$${amount}`;
                     calculateTotal();
                 }
@@ -106,10 +100,12 @@
         function addMaterialRow() {
             const container = document.getElementById('materialsContainer');
             const rows = container.querySelectorAll('[data-row]');
+            const newIndex = rows.length;
             const newRow = document.createElement('div');
-            newRow.className = 'grid grid-cols-5 gap-4 items-center slide-in';
-            newRow.setAttribute('data-row', rows.length);
+            newRow.className = 'grid grid-cols-6 gap-4 items-center slide-in';
+            newRow.setAttribute('data-row', newIndex);
             newRow.innerHTML = `
+                <span>${(newIndex + 1).toString().padStart(2, '0')}</span>
                 <select class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 transition duration-200" required>
                     <option value="Pla Tap">Pla Tap</option>
                     <option value="Plastic Wood">Plastic Wood</option>
@@ -120,7 +116,7 @@
                 <button type="button" onclick="deleteMaterialRow(this)" class="bg-red-600 text-white p-1 rounded-md hover:bg-red-700 transition duration-200">Delete</button>
             `;
             container.insertBefore(newRow, container.lastElementChild);
-            newRow.style.animationDelay = `${0.1 * (rows.length + 1)}s`;
+            newRow.style.animationDelay = `${0.1 * (newIndex + 1)}s`;
         }
 
         function deleteMaterialRow(button) {
@@ -131,7 +127,7 @@
                     row.remove();
                     calculateTotal();
                     renumberRows();
-                }, 300); // Match the transition duration
+                }, 300);
             }
         }
 
@@ -139,6 +135,7 @@
             const rows = document.querySelectorAll('[data-row]');
             rows.forEach((row, index) => {
                 row.setAttribute('data-row', index);
+                row.querySelector('span').textContent = (index + 1).toString().padStart(2, '0');
             });
         }
 
@@ -156,12 +153,10 @@
             try {
                 const companyName = document.getElementById('companyName').value || 'TEXTURE WORLD';
                 const invoiceDate = document.getElementById('invoiceDate').value;
-                const customerName = document.getElementById('customerName').value;
-                const phoneNumber = document.getElementById('phoneNumber').value;
-                const address = document.getElementById('address').value;
+                const clientName = document.getElementById('clientName').value;
                 const totalAmount = parseFloat(document.getElementById('totalAmount').value.replace('$', '')) || 0;
 
-                if (!customerName || !phoneNumber || !address || !invoiceDate) {
+                if (!clientName || !invoiceDate) {
                     alert('Please fill in all required fields.');
                     return;
                 }
@@ -180,44 +175,66 @@
 
                 // Header Section
                 doc.setFontSize(20);
-                doc.text(companyName, 80, 20);
+                doc.text(companyName, 70, 20);
                 doc.setFontSize(12);
-                doc.text(`Invoice Number: ${invoiceNumber}`, 20, 30);
-                doc.text(`Invoice Date: ${new Date(invoiceDate).toLocaleDateString('en-GB')}`, 20, 40);
+                doc.text('Address - 25, Vrindavan Garden, Near Scheme no-140, Piplyani, Indore', 50, 30);
+                doc.text('Email - textureworldindia@gmail.com', 70, 40);
+                doc.text(`Invoice Number: ${invoiceNumber}`, 20, 50);
+                doc.text(`Date of Estimate: ${new Date(invoiceDate).toLocaleDateString('en-GB')}`, 20, 60);
 
                 // Customer Details Section
-                doc.text('Customer Details:', 20, 50);
-                doc.text(`Name: ${customerName}`, 20, 60);
-                doc.text(`Phone: ${phoneNumber}`, 20, 70);
-                doc.text(`Address: ${address}`, 20, 80);
+                doc.setFontSize(12);
+                doc.text(`Client's/Site Name: ${clientName}`, 20, 70);
 
                 // Material Details Section
-                doc.setFontSize(12);
                 const rows = document.querySelectorAll('[data-row]');
-                let y = 90;
-                doc.text('Material Summary:', 20, y);
-                y += 10;
-                doc.text('Material Type', 20, y);
-                doc.text('Rate (Sq.Ft)', 70, y);
-                doc.text('Total Sq.Ft', 120, y);
-                doc.text('Amount', 170, y);
+                let y = 80;
+                doc.text('S.No.', 20, y);
+                doc.text('Texture', 40, y);
+                doc.text('Area (Sq.Ft)', 80, y);
+                doc.text('Rate (Sq.Ft)', 120, y);
+                doc.text('Amount', 160, y);
                 y += 10;
                 rows.forEach(row => {
-                    const material = row.querySelector('select').value;
-                    const rate = parseFloat(row.querySelectorAll('input')[0].value) || 0;
-                    const sqft = parseFloat(row.querySelectorAll('input')[1].value) || 0;
-                    const amount = (rate * sqft).toFixed(2);
-                    doc.text(material, 20, y);
-                    doc.text(`$${rate.toFixed(2)}`, 70, y);
-                    doc.text(`${sqft}`, 120, y);
-                    doc.text(`$${amount}`, 170, y);
+                    const texture = row.querySelector('select').value;
+                    const area = parseFloat(row.querySelectorAll('input')[0].value) || 0;
+                    const rate = parseFloat(row.querySelectorAll('input')[1].value) || 0;
+                    const amount = (area * rate).toFixed(2);
+                    doc.text((rows.indexOf(row) + 1).toString().padStart(2, '0'), 20, y);
+                    doc.text(texture, 40, y);
+                    doc.text(`${area}`, 80, y);
+                    doc.text(`$${rate.toFixed(2)}`, 120, y);
+                    doc.text(`$${amount}`, 160, y);
                     y += 10;
                 });
-                doc.text('Total Amount', 170, y);
+                doc.text('Total Amount', 160, y);
                 doc.text(`$${totalAmount.toFixed(2)}`, 200, y);
 
+                // Terms & Conditions
+                doc.setFontSize(10);
+                y += 10;
+                doc.text('Terms & Conditions:', 20, y);
+                y += 5;
+                doc.text('1. This price includes Labour of Texture.', 20, y);
+                y += 5;
+                doc.text('2. Payment Schedule:', 20, y);
+                y += 5;
+                doc.text('   • 50% Advance', 30, y);
+                y += 5;
+                doc.text('   • 30% During Work in Progress', 30, y);
+                y += 5;
+                doc.text('   • 20% On Handover', 30, y);
+                y += 5;
+                doc.text('3. Scaffolding would be arranged by the Client in case of multiple floors.', 20, y);
+                y += 5;
+                doc.text('4. Final amount may vary as per actual measurement.', 20, y);
+
+                // Client Signature
+                y += 10;
+                doc.text('Client Signature: ____________________', 20, y);
+
                 // Save PDF
-                doc.save(`Invoice_${invoiceNumber}_${customerName}_${new Date(invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`);
+                doc.save(`Estimate_${invoiceNumber}_${clientName}_${new Date(invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-')}.pdf`);
                 console.log('PDF generated successfully');
             } catch (error) {
                 console.error('Error generating PDF:', error);
